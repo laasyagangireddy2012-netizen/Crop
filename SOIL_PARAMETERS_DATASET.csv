@@ -1,0 +1,25 @@
+Soil_Type,Climate,Typical_pH,pH_Min,pH_Max,N_Min,N_Max,P_Min,P_Max,K_Min,K_Max,Classification,Suitable_Crops
+clay,tropical,6.5,6.0,7.5,40,60,30,50,35,55,Medium texture,Rice|Wheat|Sugarcane
+clay,subtropical,6.5,6.0,7.5,45,65,35,55,40,60,Medium texture,Wheat|Cotton|Sugarcane
+clay,temperate,6.5,6.0,7.5,50,70,40,60,45,65,Medium texture,Wheat|Potato
+clay,arid,6.5,6.0,7.5,35,55,25,45,30,50,Medium texture,Cotton
+sandy,tropical,6.0,5.5,6.8,20,35,15,30,20,40,Coarse texture,Groundnut|Maize
+sandy,subtropical,6.0,5.5,6.8,25,40,20,35,25,45,Coarse texture,Groundnut|Tomato|Potato
+sandy,temperate,6.0,5.5,6.8,30,45,25,40,30,50,Coarse texture,Potato|Tomato
+sandy,arid,6.0,5.5,6.8,15,30,10,25,15,35,Coarse texture,Groundnut
+loamy,tropical,6.8,6.5,7.5,50,70,40,60,45,65,Ideal texture,Rice|Maize|Sugarcane
+loamy,subtropical,6.8,6.5,7.5,55,75,45,65,50,70,Ideal texture,Wheat|Cotton|Maize|Tomato
+loamy,temperate,6.8,6.5,7.5,60,80,50,70,55,75,Ideal texture,Wheat|Potato|Tomato
+loamy,arid,6.8,6.5,7.5,40,60,30,50,35,55,Ideal texture,Cotton
+black,tropical,7.5,7.0,8.5,45,65,35,55,40,60,Heavy clay,Cotton|Sugarcane
+black,subtropical,7.5,7.0,8.5,50,70,40,60,45,65,Heavy clay,Cotton|Wheat
+black,temperate,7.5,7.0,8.5,55,75,45,65,50,70,Heavy clay,Wheat
+black,arid,7.5,7.0,8.5,40,60,30,50,35,55,Heavy clay,Cotton
+red,tropical,6.2,5.5,7.0,30,50,25,45,30,50,Laterite,Groundnut|Tomato
+red,subtropical,6.2,5.5,7.0,35,55,30,50,35,55,Laterite,Groundnut|Tomato|Potato
+red,temperate,6.2,5.5,7.0,40,60,35,55,40,60,Laterite,Potato|Tomato
+red,arid,6.2,5.5,7.0,25,45,20,40,25,45,Laterite,Groundnut
+alluvial,tropical,7.0,6.5,7.8,55,75,45,65,50,70,Fertile,Rice|Maize|Sugarcane
+alluvial,subtropical,7.0,6.5,7.8,60,80,50,70,55,75,Fertile,Rice|Wheat|Cotton|Maize
+alluvial,temperate,7.0,6.5,7.8,65,85,55,75,60,80,Fertile,Wheat|Maize
+alluvial,arid,7.0,6.5,7.8,45,65,35,55,40,60,Fertile,Cotton|Maize

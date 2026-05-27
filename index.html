@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CROPXAI - Smart Crop Recommendation System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         FULL-SCREEN LOGIN PAGE (shown before login)
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="loginPage" class="login-page">
+        <div class="lp-deco lp-deco-1">&#127807;</div>
+        <div class="lp-deco lp-deco-2">&#127803;</div>
+        <div class="lp-deco lp-deco-3">&#127811;</div>
+        <div class="lp-deco lp-deco-4">&#127793;</div>
+        <div class="lp-deco lp-deco-5">&#9728;&#65039;</div>
+        <div class="lp-deco lp-deco-6">&#127806;</div>
+        <div class="lp-center-card">
+            <div class="lp-lang-row">
+                <select id="languageSelector" class="lp-lang-select">
+                    <option value="en">&#127760; English</option>
+                    <option value="te">&#127760; &#3108;&#3142;&#3122;&#3137;&#3095;&#3137;</option>
+                    <option value="hi">&#127760; &#2361;&#2367;&#2306;&#2342;&#2368;</option>
+                </select>
+            </div>
+            <div class="lp-logo-section">
+                <div class="lp-logo-icon">&#127806;</div>
+                <div class="lp-logo-text">
+                    <span class="lp-logo-crop">CROP</span><span class="lp-logo-xai">XAI</span>
+                </div>
+                <p class="lp-tagline" data-translate="tagline">AI-Powered Crop Recommendations</p>
+            </div>
+            <div class="lp-divider"><span></span><span class="lp-divider-icon">&#127806;</span><span></span></div>
+            <h2 id="authTitle" class="lp-card-title">Welcome Back</h2>
+            <p class="lp-card-sub" data-translate="loginSubtitle">Sign in to your account to continue</p>
+            <form id="loginForm" class="lp-form">
+                <div class="lp-field-group"><span class="lp-field-icon">&#128100;</span><input type="text" id="username" placeholder="Username" data-translate-placeholder="username" required></div>
+                <div class="lp-field-group"><span class="lp-field-icon">&#128274;</span><input type="password" id="password" placeholder="Password" data-translate-placeholder="password" required></div>
+                <button type="submit" class="lp-btn-primary" data-translate="loginBtn">Login</button>
+                <div class="lp-links">
+                    <a href="#" id="createAccountLink" data-translate="createAccount">Create New Account</a>
+                    <a href="#" id="forgotPasswordLink" data-translate="forgotPassword">Forgot Password?</a>
+                </div>
+            </form>
+            <form id="registerForm" class="lp-form" style="display:none;">
+                <div class="lp-field-group"><span class="lp-field-icon">&#128100;</span><input type="text" id="newUsername" placeholder="Username *" data-translate-placeholder="username" required></div>
+                <div class="lp-field-group"><span class="lp-field-icon">&#128274;</span><input type="password" id="newPassword" placeholder="Password *" data-translate-placeholder="password" required></div>
+                <div class="lp-field-group"><span class="lp-field-icon">&#128274;</span><input type="password" id="confirmPassword" placeholder="Confirm Password *" data-translate-placeholder="confirmPassword" required></div>
+                <button type="submit" class="lp-btn-primary" data-translate="registerBtn">Create Account</button>
+                <a href="#" id="backToLoginLink" class="lp-back-link" data-translate="backToLogin">&#8592; Back to Login</a>
+            </form>
+            <form id="forgotPasswordForm" class="lp-form" style="display:none;">
+                <p class="lp-hint" data-translate="resetHint">Enter your username and set a new password.</p>
+                <div class="lp-field-group"><span class="lp-field-icon">&#128100;</span><input type="text" id="resetUsername" placeholder="Username *" data-translate-placeholder="username" required></div>
+                <div class="lp-field-group"><span class="lp-field-icon">&#128274;</span><input type="password" id="resetNewPassword" placeholder="New Password *" data-translate-placeholder="newPassword" required></div>
+                <div class="lp-field-group"><span class="lp-field-icon">&#128274;</span><input type="password" id="resetConfirmPassword" placeholder="Confirm New Password *" data-translate-placeholder="confirmPassword" required></div>
+                <button type="submit" class="lp-btn-primary" data-translate="resetBtn">Reset Password</button>
+                <a href="#" id="backToLoginLink2" class="lp-back-link" data-translate="backToLogin">&#8592; Back to Login</a>
+            </form>
+            <p class="lp-footer" data-translate="footerText">&#169; 2026 CROPXAI &middot; Empowering Farmers with AI</p>
+        </div>
+    </div>
+
+    <!-- ── Top Navigation Bar (shown after login) ─────────────────────── -->
+    <nav class="topnav" style="display:none;" id="topNav">
+        <div class="topnav-brand">
+            <span class="brand-icon">🌾</span>
+            <div>
+                <span class="brand-name">CROPXAI</span>
+                <span class="brand-tag" data-translate="tagline">AI-Powered Crop Recommendations</span>
+            </div>
+        </div>
+        <div class="topnav-right">
+            <select id="languageSelectorNav" class="language-selector">
+                <option value="en">🌐 English</option>
+                <option value="te">🌐 తెలుగు</option>
+                <option value="hi">🌐 हिंदी</option>
+            </select>
+        </div>
+    </nav>
+
+    <!-- Hidden modals for info popups (still needed) -->
+    <div id="loginModal" class="modal" style="display:none !important;"></div>
+
+    <div class="app-shell">
+
+        <main id="mainContent" style="display: none;">
+            <!-- ── Sidebar ──────────────────────────────────────────────── -->
+            <aside class="sidebar">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">👨‍🌾</div>
+                    <div class="sidebar-user-info">
+                        <span class="sidebar-username" id="profileName">Farmer</span>
+                        <span class="sidebar-role" data-translate="welcome">Dashboard</span>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <a class="sidebar-link active" id="navFarm" onclick="showTab('farm')">
+                        <span class="sidebar-icon">🌱</span>
+                        <span data-translate="inputTitle">Farm Details</span>
+                    </a>
+                    <a class="sidebar-link" id="navDisease">
+                        <span class="sidebar-icon">🔬</span>
+                        <span data-translate="diseaseDetection">Disease Detection</span>
+                    </a>
+                    <a class="sidebar-link" id="navVoice">
+                        <span class="sidebar-icon">🎤</span>
+                        <span data-translate="voiceAssistant">Voice Assistant</span>
+                    </a>
+                    <a class="sidebar-link" id="navProfile">
+                        <span class="sidebar-icon">👤</span>
+                        <span data-translate="profile">Profile</span>
+                    </a>
+                </nav>
+                <button id="logoutBtn" class="sidebar-logout" data-translate="logout">⏻ Logout</button>
+                <!-- Hidden trigger buttons for JS compatibility -->
+                <button id="diseaseDetectionBtn" style="display:none;"></button>
+                <button id="voiceBtn" style="display:none;"></button>
+                <button id="profileBtn" style="display:none;"></button>
+            </aside>
+
+            <!-- ── Main Content Area ────────────────────────────────────── -->
+            <div class="main-area">
+
+                <!-- Top bar inside main -->
+                <div class="main-topbar">
+                    <div class="main-topbar-left">
+                        <h1 class="page-title" data-translate="inputTitle">Farm Details</h1>
+                        <span class="page-subtitle" data-translate="tagline">AI-Powered Crop Recommendations</span>
+                    </div>
+                </div>
+
+                <!-- ── Page: Farm Details ─────────────────────────────── -->
+                <div id="pageFarm" class="sub-page active-page">
+                    <div class="dash-card form-card">
+                        <div class="card-header">
+                            <span class="card-icon">🌾</span>
+                            <h3 data-translate="inputTitle">Enter Your Farm Details</h3>
+                        </div>
+
+                        <!-- Weather Widget -->
+                        <div id="weatherWidget" class="weather-widget" style="display:none;">
+                            <div class="weather-widget-header">
+                                <span>🌤️ <span data-translate="liveWeather">Live Weather</span></span>
+                                <span id="weatherLocation" class="weather-location"></span>
+                            </div>
+                            <div class="weather-widget-body">
+                                <div class="weather-stat"><span class="weather-icon" id="weatherIcon">🌡️</span><span id="weatherTemp">--°C</span></div>
+                                <div class="weather-stat">💧 <span id="weatherHumidity">--%</span></div>
+                                <div class="weather-stat">🌧️ <span id="weatherRain">-- mm</span></div>
+                                <div class="weather-stat">💨 <span id="weatherWind">-- km/h</span></div>
+                            </div>
+                            <div class="weather-climate-tag">
+                                <span data-translate="detectedClimate">Detected Climate:</span>
+                                <strong id="detectedClimateLabel">--</strong>
+                                <span class="climate-auto-note">(auto-applied)</span>
+                            </div>
+                            <div id="weatherSource" class="weather-source">Source: Open-Meteo (WMO Data)</div>
+                        </div>
+                        <div id="weatherLoading" class="weather-loading" style="display:none;">
+                            <span class="weather-spinner">⏳</span> <span data-translate="fetchingWeather">Fetching live weather data...</span>
+                        </div>
+                        <div id="weatherError" class="weather-error" style="display:none;"></div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group full-width">
+                                <label data-translate="location">📍 Location</label>
+                                <div class="input-with-btn">
+                                    <select id="location" required>
+                                        <option value="">Select State / UT</option>
+                                        <optgroup label="States">
+                                            <option value="andhra-pradesh">Andhra Pradesh</option>
+                                            <option value="arunachal-pradesh">Arunachal Pradesh</option>
+                                            <option value="assam">Assam</option>
+                                            <option value="bihar">Bihar</option>
+                                            <option value="chhattisgarh">Chhattisgarh</option>
+                                            <option value="goa">Goa</option>
+                                            <option value="gujarat">Gujarat</option>
+                                            <option value="haryana">Haryana</option>
+                                            <option value="himachal-pradesh">Himachal Pradesh</option>
+                                            <option value="jharkhand">Jharkhand</option>
+                                            <option value="karnataka">Karnataka</option>
+                                            <option value="kerala">Kerala</option>
+                                            <option value="madhya-pradesh">Madhya Pradesh</option>
+                                            <option value="maharashtra">Maharashtra</option>
+                                            <option value="manipur">Manipur</option>
+                                            <option value="meghalaya">Meghalaya</option>
+                                            <option value="mizoram">Mizoram</option>
+                                            <option value="nagaland">Nagaland</option>
+                                            <option value="odisha">Odisha</option>
+                                            <option value="punjab">Punjab</option>
+                                            <option value="rajasthan">Rajasthan</option>
+                                            <option value="sikkim">Sikkim</option>
+                                            <option value="tamil-nadu">Tamil Nadu</option>
+                                            <option value="telangana">Telangana</option>
+                                            <option value="tripura">Tripura</option>
+                                            <option value="uttar-pradesh">Uttar Pradesh</option>
+                                            <option value="uttarakhand">Uttarakhand</option>
+                                            <option value="west-bengal">West Bengal</option>
+                                        </optgroup>
+                                        <optgroup label="Union Territories">
+                                            <option value="andaman-and-nicobar">Andaman & Nicobar</option>
+                                            <option value="chandigarh">Chandigarh</option>
+                                            <option value="dadra-and-nagar-haveli">Dadra & Nagar Haveli</option>
+                                            <option value="daman-and-diu">Daman & Diu</option>
+                                            <option value="delhi">Delhi (NCT)</option>
+                                            <option value="jammu-and-kashmir">Jammu & Kashmir</option>
+                                            <option value="ladakh">Ladakh</option>
+                                            <option value="lakshadweep">Lakshadweep</option>
+                                            <option value="puducherry">Puducherry</option>
+                                        </optgroup>
+                                    </select>
+                                    <button type="button" class="auto-btn" id="autoLocationBtn" data-translate="detectLocation">📍</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="area">📐 Area (acres)</label>
+                                <input type="number" id="area" min="0.1" step="0.1" placeholder="e.g. 2.5" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="season">🗓️ Season</label>
+                                <select id="season" required>
+                                    <option value="">Select Season</option>
+                                    <option value="kharif">Kharif (Monsoon)</option>
+                                    <option value="rabi">Rabi (Winter)</option>
+                                    <option value="zaid">Zaid (Summer)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="soilType">🪨 Soil Type</label>
+                                <select id="soilType" required>
+                                    <option value="">Select Soil Type</option>
+                                    <option value="clay">Clay</option>
+                                    <option value="sandy">Sandy</option>
+                                    <option value="loamy">Loamy</option>
+                                    <option value="black">Black</option>
+                                    <option value="red">Red</option>
+                                    <option value="alluvial">Alluvial</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="climate" value="">
+                            <div class="form-group">
+                                <label data-translate="soilPh">⚗️ Soil pH</label>
+                                <div class="input-with-btn">
+                                    <input type="number" id="soilPh" min="3" max="10" step="0.1" placeholder="3–10" required>
+                                    <button type="button" class="info-btn" id="phInfoBtn">ℹ️</button>
+                                    <button type="button" class="auto-btn" id="autoPhBtn" data-translate="autoDetect">Auto</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="nitrogen">🌿 Nitrogen (N) %</label>
+                                <div class="input-with-btn">
+                                    <input type="number" id="nitrogen" min="0" max="300" step="0.1" placeholder="0–300" required>
+                                    <button type="button" class="auto-btn" id="autoNBtn" data-translate="autoDetect">Auto</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="phosphorus">🔴 Phosphorus (P) %</label>
+                                <div class="input-with-btn">
+                                    <input type="number" id="phosphorus" min="0" max="200" step="0.1" placeholder="0–200" required>
+                                    <button type="button" class="auto-btn" id="autoPBtn" data-translate="autoDetect">Auto</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="potassium">🟡 Potassium (K) %</label>
+                                <div class="input-with-btn">
+                                    <input type="number" id="potassium" min="0" max="200" step="0.1" placeholder="0–200" required>
+                                    <button type="button" class="info-btn" id="npkInfoBtn">ℹ️</button>
+                                    <button type="button" class="auto-btn" id="autoKBtn" data-translate="autoDetect">Auto</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="recommendBtn" class="btn-recommend" data-translate="getRecommendation">
+                            <span class="btn-recommend-icon">🤖</span>
+                            <span>Get Crop Recommendation</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── Page: Crop Recommendations (sub-page) ──────────── -->
+                <div id="pageResults" class="sub-page" style="display:none;">
+                    <!-- Back button bar -->
+                    <div class="results-subpage-bar">
+                        <button id="backToFarmBtn" class="btn-back-farm">
+                            ← <span data-translate="backToFarm">Back to Farm Details</span>
+                        </button>
+                        <span class="results-subpage-title" data-translate="recommendationTitle">Crop Recommendations</span>
+                    </div>
+                    <section id="resultsSection">
+                        <div id="recommendationResults"></div>
+                    </section>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+        <div id="infoModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="infoContent"></div>
+            </div>
+        </div>
+
+        <!-- ── Disease Detection Modal ─────────────────────────────────── -->
+        <div id="diseaseModal" class="modal">
+            <div class="modal-content disease-modal">
+                <span class="close">&times;</span>
+                <h2 data-translate="diseaseDetectionTitle">🔬 Plant Disease Detection</h2>
+                <p class="disease-subtitle" data-translate="diseaseSubtitle">Upload a photo of a plant leaf to identify diseases</p>
+
+                <!-- Upload Section -->
+                <div id="diseaseUploadSection">
+                    <div class="disease-upload-area" id="diseaseDropZone">
+                        <div class="upload-icon">🌿</div>
+                        <p data-translate="uploadLeafPhoto">Upload or drag a leaf photo here</p>
+                        <p class="upload-hint" data-translate="uploadHint">Supports JPG, PNG, WEBP • Max 10MB</p>
+                        <div class="upload-buttons">
+                            <label for="diseaseImageInput" class="btn-upload" data-translate="choosePhoto">📷 Choose Photo</label>
+                            <input type="file" id="diseaseImageInput" accept="image/*" style="display:none;">
+                            <button type="button" id="openCameraBtn" class="btn-upload btn-camera" data-translate="takePhoto">📸 Take Photo</button>
+                        </div>
+                    </div>
+
+                    <!-- Live Camera Section -->
+                    <div id="cameraSection" style="display:none;" class="camera-section">
+                        <video id="cameraStream" autoplay playsinline class="camera-video"></video>
+                        <canvas id="cameraCanvas" style="display:none;"></canvas>
+                        <div class="camera-controls">
+                            <button type="button" id="captureBtn" class="btn-capture">📸 Capture</button>
+                            <button type="button" id="switchCameraBtn" class="btn-switch-cam">🔄 Switch</button>
+                            <button type="button" id="closeCameraBtn" class="btn-close-cam">✕ Close</button>
+                        </div>
+                        <p class="camera-hint" data-translate="cameraHint">Point camera at the diseased leaf and tap Capture</p>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div id="diseasePreviewSection" style="display:none;">
+                        <div class="disease-preview-container">
+                            <img id="diseasePreviewImg" src="" alt="Leaf preview" class="disease-preview-img">
+                            <button type="button" id="removeImageBtn" class="btn-remove-image">✕</button>
+                        </div>
+                        <div class="disease-crop-select">
+                            <label data-translate="selectCropType">Select Crop Type:</label>
+                            <select id="diseaseCropSelect">
+                                <option value="">-- Select Crop --</option>
+                                <option value="rice">Rice / వరి / चावल</option>
+                                <option value="wheat">Wheat / గోధుమ / गेहूं</option>
+                                <option value="maize">Maize / మొక్కజొన్న / मक्का</option>
+                                <option value="cotton">Cotton / పత్తి / कपास</option>
+                                <option value="tomato">Tomato / టమాటో / टमाटर</option>
+                                <option value="potato">Potato / బంగాళాదుంప / आलू</option>
+                                <option value="groundnut">Groundnut / వేరుశెనగ / मूंगफली</option>
+                                <option value="sugarcane">Sugarcane / చెరకు / गन्ना</option>
+                            </select>
+                        </div>
+                        <button type="button" id="analyzeImageBtn" class="btn-analyze" data-translate="analyzeDisease">🔍 Analyze for Disease</button>
+                    </div>
+                </div>
+
+                <!-- Analyzing Loader -->
+                <div id="diseaseAnalyzing" style="display:none;" class="disease-analyzing">
+                    <div class="analyzing-spinner">🔬</div>
+                    <p data-translate="analyzingImage">Analyzing leaf image...</p>
+                    <div class="analyzing-bar"><div class="analyzing-fill"></div></div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="diseaseResults" style="display:none;" class="disease-results">
+                    <div id="diseaseResultContent"></div>
+                    <div class="disease-result-actions">
+                        <button type="button" id="analyzeAnotherBtn" class="btn-primary" data-translate="analyzeAnother">🔄 Analyze Another</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 data-translate="profileTitle">User Profile</h2>
+                <div id="profileContent" class="profile-content"></div>
+            </div>
+        </div>
+
+        <div id="voiceModal" class="modal">
+            <div class="modal-content voice-modal">
+                <span class="close">&times;</span>
+                <h2 data-translate="voiceAssistant">Voice Assistant</h2>
+                <div class="voice-container">
+                    <div id="voiceStatus" class="voice-status" data-translate="voiceReady">Ready to listen...</div>
+                    <button id="startVoiceBtn" class="btn-voice-large">🎤 <span data-translate="startListening">Start Listening</span></button>
+                    <div id="voiceTranscript" class="voice-transcript"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="soilData.js"></script>
+    <script src="locationData.js"></script>
+    <script src="translations.js"></script>
+    <script src="cropData.js"></script>
+    <script src="explainableAI.js"></script>
+    <script src="diseaseDatabase.js"></script>
+    <script src="weatherService.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

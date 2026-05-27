@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropXAI – Smart Farming AI Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        (function() {
+            const user = sessionStorage.getItem('cropxai_user');
+            if (!user) { window.location.replace('login.html'); }
+        })();
+    </script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+
+    <!-- Brand -->
+    <div class="sidebar-brand">
+        <span class="brand-icon">🌾</span>
+        <div class="brand-text">
+            <span class="brand-crop">Crop</span><span class="brand-xai">XAI</span>
+            <small>Smart Farming AI</small>
+        </div>
+    </div>
+
+    <!-- User card -->
+    <div class="sidebar-user">
+        <div class="user-avatar">👨‍🌾</div>
+        <div class="user-info">
+            <span class="user-name" id="sidebarUserName">Farmer</span>
+            <span class="user-role">AI Farmer</span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        <span class="nav-section-label">MAIN MENU</span>
+
+        <a href="#" class="nav-item active" data-section="dashboard" onclick="switchSection('dashboard',this)">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-section="crop-prediction" onclick="switchSection('crop-prediction',this)">
+            <span class="nav-icon">🌾</span>
+            <span class="nav-label">Crop Prediction</span>
+        </a>
+        <a href="#" class="nav-item" data-section="soil-analysis" onclick="switchSection('soil-analysis',this)">
+            <span class="nav-icon">🧪</span>
+            <span class="nav-label">Soil Analysis</span>
+        </a>
+        <a href="#" class="nav-item" data-section="weather" onclick="switchSection('weather',this)">
+            <span class="nav-icon">🌤️</span>
+            <span class="nav-label">Weather</span>
+        </a>
+        <a href="#" class="nav-item" data-section="disease-detection" onclick="switchSection('disease-detection',this)">
+            <span class="nav-icon">🔬</span>
+            <span class="nav-label">Disease Detection</span>
+            <span class="nav-badge">AI</span>
+        </a>
+
+        <span class="nav-section-label">TOOLS</span>
+
+        <a href="#" class="nav-item" id="navVoiceBtn" onclick="openVoiceAssistant(); return false;">
+            <span class="nav-icon">🎤</span>
+            <span class="nav-label">Voice Assistant</span>
+            <span class="nav-badge">AI</span>
+        </a>
+
+        <span class="nav-section-label">ACCOUNT</span>
+
+        <a href="#" class="nav-item" id="navProfileBtn" onclick="showProfile(); return false;">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Profile</span>
+        </a>
+        <a href="#" class="nav-item nav-item-danger" id="navLogoutBtn">
+            <span class="nav-icon">🚪</span>
+            <span class="nav-label">Logout</span>
+        </a>
+    </nav>
+</aside>
+
+<!-- Mobile overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN WRAPPER
+═══════════════════════════════════════════════════ -->
+<div class="main-wrapper" id="mainWrapper">
+
+    <!-- Top bar -->
+    <header class="topbar">
+        <button class="topbar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title">
+            <h1 id="topbarTitle">Dashboard</h1>
+            <p id="topbarSub">Welcome back, <strong id="topbarUser">Farmer</strong></p>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-stat" id="topbarLocationChip" style="display:none">
+                <span id="topbarLocation">📍 —</span>
+            </div>
+            <div class="topbar-stat">
+                <span class="ts-icon">🌡️</span>
+                <span class="ts-val" id="statTemp">—°C</span>
+            </div>
+            <div class="topbar-stat">
+                <span class="ts-icon">💧</span>
+                <span class="ts-val" id="statHumidity">—%</span>
+            </div>
+            <button class="topbar-voice-btn" id="topbarVoiceBtn" onclick="openVoiceAssistant()" title="Voice Assistant (AI)">
+                <span class="tvb-icon">🎤</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ── SECTION: DASHBOARD ── -->
+    <section class="page-section active" id="section-dashboard">
+        <div class="section-header">
+            <h2>🏠 Dashboard Overview</h2>
+            <p>Your smart farming command centre</p>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#48bb78,#38a169)">🌾</div>
+                <div class="stat-body">
+                    <span class="stat-num">50+</span>
+                    <span class="stat-lbl">Crop Types</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#4299e1,#3182ce)">🤖</div>
+                <div class="stat-body">
+                    <span class="stat-num">98%</span>
+                    <span class="stat-lbl">AI Accuracy</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#ed8936,#dd6b20)">🧪</div>
+                <div class="stat-body">
+                    <span class="stat-num">6</span>
+                    <span class="stat-lbl">Soil Types</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#9f7aea,#805ad5)">📡</div>
+                <div class="stat-body">
+                    <span class="stat-num">XAI</span>
+                    <span class="stat-lbl">Explainable AI</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="quick-actions">
+            <h3>⚡ Quick Actions</h3>
+            <div class="qa-grid">
+                <button class="qa-btn" onclick="switchSection('crop-prediction', document.querySelector('[data-section=crop-prediction]'))">
+                    <span>🌾</span> Get Crop Recommendation
+                </button>
+                <button class="qa-btn" onclick="switchSection('soil-analysis', document.querySelector('[data-section=soil-analysis]'))">
+                    <span>🧪</span> Analyse Soil
+                </button>
+                <button class="qa-btn" onclick="switchSection('weather', document.querySelector('[data-section=weather]'))">
+                    <span>🌤️</span> Check Weather
+                </button>
+                <button class="qa-btn" onclick="switchSection('disease-detection', document.querySelector('[data-section=disease-detection]'))">
+                    <span>🔬</span> Detect Disease
+                </button>
+                <button class="qa-btn" onclick="openVoiceAssistant()">
+                    <span>🎤</span> Voice Command
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── SECTION: CROP PREDICTION ── -->
+    <section class="page-section" id="section-crop-prediction">
+        <div class="section-header">
+            <h2>🌾 Crop Prediction</h2>
+            <p>Enter your farm details to get AI-powered crop recommendations</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card" id="inputCard">
+                <div class="card-header">
+                    <span class="card-icon">📋</span>
+                    <h3>Enter Your Farm Details</h3>
+                </div>
+                <div class="card-body">
+
+                    <div class="form-group">
+                        <label>📍 Location (District / City)</label>
+                        <div class="loc-status-badge loc-idle" id="locStatusBadge">
+                            <span id="locStatusIcon">📍</span>
+                            <span id="locStatusText">Location not set</span>
+                        </div>
+                        <div class="loc-input-row">
+                            <div class="loc-input-wrap">
+                                <span class="loc-pin-icon">📍</span>
+                                <input type="text" id="location" placeholder="Detecting your location..." autocomplete="off">
+                                <button type="button" class="loc-clear-btn" id="locClearBtn" title="Clear location" onclick="document.getElementById('location').value=''; document.getElementById('locStatusBadge').className='loc-status-badge loc-idle'; document.getElementById('locStatusText').textContent='Location not set';">✕</button>
+                            </div>
+                            <button type="button" class="btn-detect-loc" id="detectLocBtn" title="Auto-detect my location">
+                                📍 Detect My Location
+                            </button>
+                        </div>
+                        <div class="manual-loc-wrap" id="manualLocWrap" style="display:none">
+                            <span class="manual-loc-hint">✏️ Location access denied — type your city manually above</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🌤️ Climate</label>
+                        <select id="climate" required>
+                            <option value="">Select Climate</option>
+                            <option value="tropical">Tropical</option>
+                            <option value="subtropical">Subtropical</option>
+                            <option value="temperate">Temperate</option>
+                            <option value="arid">Arid</option>
+                        </select>
+                        <div class="clim-detect-badge" id="climDetectBadge" style="display:none">
+                            <span class="clim-detect-icon" id="climDetectIcon">🌤️</span>
+                            <span class="clim-detect-text" id="climDetectText">Climate detected based on your location</span>
+                            <button type="button" class="clim-detect-clear" id="climDetectClear" title="Clear auto-detected climate">✕</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>📐 Area (in acres)</label>
+                        <input type="number" id="area" min="0.1" step="0.1" placeholder="e.g. 5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🗓️ Season</label>
+                        <select id="season" required>
+                            <option value="">Select Season</option>
+                            <option value="kharif">Kharif (Monsoon)</option>
+                            <option value="rabi">Rabi (Winter)</option>
+                            <option value="zaid">Zaid (Summer)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🌱 Soil Type</label>
+                        <select id="soilType" required>
+                            <option value="">Select Soil Type</option>
+                            <option value="clay">Clay</option>
+                            <option value="sandy">Sandy</option>
+                            <option value="loamy">Loamy</option>
+                            <option value="black">Black</option>
+                            <option value="red">Red</option>
+                            <option value="alluvial">Alluvial</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>⚗️ Soil pH Value</label>
+                        <div class="input-row">
+                            <input type="number" id="soilPh" min="3" max="10" step="0.1" placeholder="6.5" required>
+                            <button type="button" class="icon-btn info-btn" id="phInfoBtn" title="pH Info">ℹ️</button>
+                            <button type="button" class="auto-btn" id="autoPhBtn">Auto</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🟢 Nitrogen (N) %</label>
+                        <div class="input-row">
+                            <input type="number" id="nitrogen" min="0" max="100" step="0.1" placeholder="40" required>
+                            <button type="button" class="auto-btn" id="autoNBtn">Auto</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🟡 Phosphorus (P) %</label>
+                        <div class="input-row">
+                            <input type="number" id="phosphorus" min="0" max="100" step="0.1" placeholder="30" required>
+                            <button type="button" class="auto-btn" id="autoPBtn">Auto</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🔵 Potassium (K) %</label>
+                        <div class="input-row">
+                            <input type="number" id="potassium" min="0" max="100" step="0.1" placeholder="20" required>
+                            <button type="button" class="icon-btn info-btn" id="npkInfoBtn" title="NPK Info">ℹ️</button>
+                            <button type="button" class="auto-btn" id="autoKBtn">Auto</button>
+                        </div>
+                    </div>
+
+                    <button id="recommendBtn" class="btn-primary btn-large">
+                        🤖 Get Crop Recommendation
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" id="resultsCard" style="display:none">
+                <div class="card-header" id="resultsCardHeader">
+                    <span class="card-icon">🏆</span>
+                    <h3>AI Crop Rankings</h3>
+                    <div class="results-header-actions">
+                        <span class="tts-status-badge" id="ttsStatusBadge" style="display:none"></span>
+                        <button class="btn-read-aloud" id="btnReadAloud" title="Read results aloud">
+                            🔊 <span>Read Aloud</span>
+                        </button>
+                        <button class="btn-read-aloud btn-read-pause" id="btnReadPause" style="display:none" title="Pause">
+                            ⏸ <span>Pause</span>
+                        </button>
+                        <button class="btn-read-aloud btn-read-stop" id="btnReadStop" style="display:none" title="Stop">
+                            ⏹ <span>Stop</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <div id="recommendationResults"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── SECTION: SOIL ANALYSIS ── -->
+    <section class="page-section" id="section-soil-analysis">
+        <div class="section-header">
+            <h2>🧪 Soil Analysis</h2>
+            <p>Understand your soil composition and health</p>
+        </div>
+        <div class="info-cards-grid">
+            <div class="info-card">
+                <div class="ic-icon">🟫</div>
+                <h4>Black Soil</h4>
+                <p>Rich in clay minerals. Ideal for cotton, soybean, and wheat. pH 7.5–8.5. Found in Deccan plateau.</p>
+            </div>
+            <div class="info-card">
+                <div class="ic-icon">🟥</div>
+                <h4>Red Soil</h4>
+                <p>Rich in iron oxides. Suitable for groundnut, millets, and tobacco. pH 5.5–7.0. Found in peninsular India.</p>
+            </div>
+            <div class="info-card">
+                <div class="ic-icon">🟨</div>
+                <h4>Sandy Soil</h4>
+                <p>Low water retention. Good for watermelon, peanuts, and carrots. pH 5.5–7.0. Requires frequent irrigation.</p>
+            </div>
+            <div class="info-card">
+                <div class="ic-icon">🟤</div>
+                <h4>Clay Soil</h4>
+                <p>High water retention. Suitable for rice and wheat. pH 6.0–7.5. Needs good drainage management.</p>
+            </div>
+            <div class="info-card">
+                <div class="ic-icon">🌿</div>
+                <h4>Loamy Soil</h4>
+                <p>Best all-round soil. Ideal for most crops. pH 6.0–7.0. Balanced sand, silt, and clay composition.</p>
+            </div>
+            <div class="info-card">
+                <div class="ic-icon">💧</div>
+                <h4>Alluvial Soil</h4>
+                <p>Highly fertile. Excellent for rice, wheat, and sugarcane. pH 6.5–8.0. Found in river plains.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── SECTION: WEATHER ── -->
+    <section class="page-section" id="section-weather">
+        <div class="section-header">
+            <h2>🌤️ Weather Overview</h2>
+            <p>Current conditions and farming advisories</p>
+        </div>
+        <div class="weather-placeholder">
+            <div class="weather-icon-big">🌤️</div>
+            <h3>Weather Integration</h3>
+            <p id="weatherLocation" style="font-size:1.1rem;color:var(--accent);font-weight:600;margin-bottom:6px">Detecting location...</p>
+            <p>Real-time weather data, rainfall forecasts, and crop-specific advisories for your area.</p>
+            <div class="weather-tips">
+                <div class="tip-card">🌧️ <strong>Kharif Season</strong><br>Monitor monsoon onset for sowing</div>
+                <div class="tip-card">❄️ <strong>Rabi Season</strong><br>Watch for frost warnings in Dec–Jan</div>
+                <div class="tip-card">☀️ <strong>Zaid Season</strong><br>Ensure irrigation during peak heat</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── SECTION: DISEASE DETECTION ── -->
+    <section class="page-section" id="section-disease-detection">
+        <div class="section-header">
+            <h2>🔬 Plant Disease Detection</h2>
+            <p>Upload a leaf image for instant AI-powered disease diagnosis</p>
+        </div>
+
+        <div class="dd-layout">
+
+            <!-- LEFT: Upload + Preview -->
+            <div class="dd-upload-panel card">
+                <div class="card-header">
+                    <span class="card-icon">📸</span>
+                    <h3>Upload Leaf Image</h3>
+                </div>
+                <div class="card-body">
+
+                    <!-- Crop selector -->
+                    <div class="form-group">
+                        <label>🌱 Select Crop Type</label>
+                        <select id="ddCropSelect" required>
+                            <option value="">— Select crop —</option>
+                            <option value="rice">🌾 Rice</option>
+                            <option value="wheat">🌿 Wheat</option>
+                            <option value="tomato">🍅 Tomato</option>
+                            <option value="potato">🥔 Potato</option>
+                            <option value="maize">🌽 Maize</option>
+                            <option value="cotton">🌸 Cotton</option>
+                            <option value="groundnut">🥜 Groundnut</option>
+                            <option value="sugarcane">🎋 Sugarcane</option>
+                        </select>
+                    </div>
+
+                    <!-- Drop zone -->
+                    <div class="dd-drop-zone" id="ddDropZone">
+                        <div class="dd-drop-icon">🍃</div>
+                        <p class="dd-drop-title">Drag &amp; drop leaf image here</p>
+                        <p class="dd-drop-sub">or click to browse files</p>
+                        <p class="dd-drop-formats">Supports JPG, JPEG, PNG · Max 10 MB</p>
+                        <input type="file" id="ddFileInput" accept=".jpg,.jpeg,.png" style="display:none">
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="dd-preview-wrap" id="ddPreviewWrap" style="display:none">
+                        <div class="dd-preview-header">
+                            <span class="dd-preview-label">📷 Preview</span>
+                            <span class="dd-file-info" id="ddFileInfo"></span>
+                        </div>
+                        <img id="ddPreviewImg" class="dd-preview-img" src="" alt="Leaf preview">
+                    </div>
+
+                    <!-- Error -->
+                    <div class="dd-error" id="ddError" style="display:none"></div>
+
+                    <!-- Action buttons -->
+                    <div class="dd-actions">
+                        <button id="ddDetectBtn" class="dd-detect-btn" disabled>
+                            <span class="dd-btn-text">🔬 Detect Disease</span>
+                            <span class="dd-btn-spin" style="display:none">
+                                <svg class="dd-spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                </svg>
+                                Analyzing...
+                            </span>
+                        </button>
+                        <button id="ddResetBtn" class="dd-reset-btn">↺ Upload Another</button>
+                    </div>
+
+                    <!-- Tips -->
+                    <div class="dd-tips">
+                        <p class="dd-tips-title">📌 Tips for best results</p>
+                        <ul>
+                            <li>Use a clear, well-lit photo of the leaf</li>
+                            <li>Capture the affected area close-up</li>
+                            <li>Avoid blurry or dark images</li>
+                            <li>Single leaf per image works best</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Loading + Results -->
+            <div class="dd-results-panel">
+
+                <!-- Loading animation -->
+                <div class="dd-loader" id="ddLoader" style="display:none">
+                    <div class="dd-loader-inner">
+                        <div class="dd-scan-ring"></div>
+                        <div class="dd-scan-ring dd-ring-2"></div>
+                        <div class="dd-scan-ring dd-ring-3"></div>
+                        <div class="dd-scan-leaf">🍃</div>
+                    </div>
+                    <p class="dd-loader-text">AI is analyzing your leaf image...</p>
+                    <div class="dd-loader-steps">
+                        <span class="dd-step active" id="ddStep1">🔍 Scanning image</span>
+                        <span class="dd-step" id="ddStep2">🧬 Extracting features</span>
+                        <span class="dd-step" id="ddStep3">🤖 Running AI model</span>
+                        <span class="dd-step" id="ddStep4">📊 Generating report</span>
+                    </div>
+                </div>
+
+                <!-- Placeholder (before upload) -->
+                <div class="dd-placeholder" id="ddPlaceholder">
+                    <div class="dd-placeholder-icon">🌿</div>
+                    <h3>Ready to Diagnose</h3>
+                    <p>Upload a plant leaf image and select the crop type to get an instant AI-powered disease diagnosis with treatment recommendations.</p>
+                    <div class="dd-feature-chips">
+                        <span class="dd-chip">🔬 Disease ID</span>
+                        <span class="dd-chip">📊 Confidence Score</span>
+                        <span class="dd-chip">💊 Treatment Plan</span>
+                        <span class="dd-chip">🛡️ Prevention Tips</span>
+                        <span class="dd-chip">🌿 Organic Remedies</span>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="ddResults" style="display:none"></div>
+
+            </div>
+        </div>
+    </section>
+
+</div><!-- /.main-wrapper -->
+
+<!-- ═══════════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════════ -->
+
+<!-- Hidden login modal (kept for app.js compatibility) -->
+<div id="loginModal" class="modal" style="display:none">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="authTitle">Farmer Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit" class="btn-primary">Login</button>
+            <div class="auth-links">
+                <a href="#" id="createAccountLink">Create New Account</a>
+                <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+            </div>
+        </form>
+        <form id="registerForm" style="display:none">
+            <input type="text" id="newUsername" placeholder="Username" required>
+            <input type="email" id="newEmail" placeholder="Email" required>
+            <input type="password" id="newPassword" placeholder="Password" required>
+            <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+            <input type="text" id="farmerName" placeholder="Full Name" required>
+            <button type="submit" class="btn-primary">Register</button>
+            <a href="#" id="backToLoginLink">Back to Login</a>
+        </form>
+        <form id="forgotPasswordForm" style="display:none">
+            <input type="text" id="resetUsername" placeholder="Username" required>
+            <input type="email" id="resetEmail" placeholder="Email" required>
+            <input type="password" id="resetNewPassword" placeholder="New Password" required>
+            <button type="submit" class="btn-primary">Reset Password</button>
+            <a href="#" id="backToLoginLink2">Back to Login</a>
+        </form>
+    </div>
+</div>
+
+<!-- Info modal -->
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="infoContent"></div>
+    </div>
+</div>
+
+<!-- Profile modal -->
+<div id="profileModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>👤 User Profile</h2>
+        <div id="profileContent" class="profile-content"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     VOICE ASSISTANT MODAL
+═══════════════════════════════════════════════════ -->
+<div id="vaModal" class="va-modal-backdrop" style="display:none" role="dialog" aria-modal="true" aria-label="Voice Assistant">
+    <div class="va-modal">
+
+        <!-- Header -->
+        <div class="va-modal-header">
+            <div class="va-header-left">
+                <div class="va-header-icon">🎤</div>
+                <div>
+                    <h2 class="va-title">Voice Assistant</h2>
+                    <p class="va-subtitle">AI-powered voice control for CropXAI</p>
+                </div>
+            </div>
+            <button class="va-close-btn" id="vaModalClose" aria-label="Close voice assistant">✕</button>
+        </div>
+
+        <!-- Mic visualiser -->
+        <div class="va-mic-section">
+            <div class="va-mic-wrap" id="vaMicRing">
+                <div class="va-mic-ring va-ring-1"></div>
+                <div class="va-mic-ring va-ring-2"></div>
+                <div class="va-mic-ring va-ring-3"></div>
+                <div class="va-mic-core">🎤</div>
+            </div>
+
+            <!-- Start / Stop buttons -->
+            <div class="va-btn-row">
+                <button class="va-start-btn" id="vaStartBtn">
+                    <span class="va-btn-icon">🎤</span>
+                    <span>Start Listening</span>
+                </button>
+                <button class="va-stop-btn" id="vaStopBtn" style="display:none">
+                    <span class="va-btn-icon">⏹</span>
+                    <span>Stop</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Status bar -->
+        <div class="va-status-bar" id="vaStatus">
+            <span class="va-status-icon">🎤</span>
+            <span class="va-status-text">Ready to listen — press the mic button</span>
+        </div>
+
+        <!-- Transcript log -->
+        <div class="va-transcript" id="vaTranscript" aria-live="polite" aria-label="Voice command log"></div>
+
+        <!-- Commands guide -->
+        <div class="va-guide">
+            <p class="va-guide-title">💬 Example Commands</p>
+            <div class="va-cmd-grid">
+                <div class="va-cmd-card">
+                    <span class="va-cmd-tag">🧭 Navigate</span>
+                    <p>"Go to crop prediction"</p>
+                    <p>"Open disease detection"</p>
+                    <p>"Show soil analysis"</p>
+                </div>
+                <div class="va-cmd-card">
+                    <span class="va-cmd-tag">📍 Location</span>
+                    <p>"Set location to Hyderabad"</p>
+                    <p>"Detect my location"</p>
+                    <p>"My location is Warangal"</p>
+                </div>
+                <div class="va-cmd-card">
+                    <span class="va-cmd-tag">🌱 Soil &amp; Climate</span>
+                    <p>"Select black soil"</p>
+                    <p>"Set climate to tropical"</p>
+                    <p>"Set season to kharif"</p>
+                </div>
+                <div class="va-cmd-card">
+                    <span class="va-cmd-tag">🤖 Actions</span>
+                    <p>"Get recommendation"</p>
+                    <p>"Auto detect values"</p>
+                    <p>"Set area to 5 acres"</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Results section (kept for app.js compatibility, hidden) -->
+<div id="resultsSection" style="display:none"></div>
+<div id="mainContent" style="display:none"></div>
+
+<!-- Language selector (hidden, kept for app.js compatibility) -->
+<select id="languageSelector" style="display:none">
+    <option value="en">English</option>
+</select>
+
+<script src="../soilData.js"></script>
+<script src="../translations.js"></script>
+<script src="../cropData.js"></script>
+<script src="../explainableAI.js"></script>
+<script src="../diseaseDatabase.js"></script>
+<script src="js/location.js"></script>
+<script src="js/app.js"></script>
+<script src="js/diseaseDetection.js"></script>
+<script src="js/voiceAssistant.js"></script>
+<script>
+// ── Sidebar navigation ────────────────────────────────────────────────────
+function switchSection(id, linkEl) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const sec = document.getElementById('section-' + id);
+    if (sec) sec.classList.add('active');
+    if (linkEl) linkEl.classList.add('active');
+
+    const titles = {
+        'dashboard':          ['Dashboard',          'Your smart farming command centre'],
+        'crop-prediction':    ['Crop Prediction',    'AI-powered crop recommendations'],
+        'soil-analysis':      ['Soil Analysis',      'Understand your soil composition'],
+        'weather':            ['Weather',            'Current conditions and advisories'],
+        'disease-detection':  ['Disease Detection',  'AI-powered plant disease diagnosis']
+    };
+    const t = titles[id] || [id, ''];
+    document.getElementById('topbarTitle').textContent = t[0];
+    document.getElementById('topbarSub').innerHTML = t[1];
+
+    if (window.innerWidth <= 900) closeSidebar();
+}
+
+function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    const mw = document.getElementById('mainWrapper');
+    sb.classList.toggle('open');
+    ov.classList.toggle('active');
+    mw.classList.toggle('sidebar-open');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+    document.getElementById('mainWrapper').classList.remove('sidebar-open');
+}
+
+// Wire logout
+document.getElementById('navLogoutBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    sessionStorage.removeItem('cropxai_user');
+    window.location.href = 'login.html';
+});
+
+// Sync user name to sidebar + topbar
+(function syncUser() {
+    const stored = sessionStorage.getItem('cropxai_user');
+    if (!stored) return;
+    try {
+        const u = JSON.parse(stored);
+        const name = u.name || u.username || 'Farmer';
+        const el1 = document.getElementById('sidebarUserName');
+        const el2 = document.getElementById('topbarUser');
+        if (el1) el1.textContent = name;
+        if (el2) el2.textContent = name;
+    } catch(e) {}
+})();
+
+// Show results card when recommendation is generated
+const resultsObserver = new MutationObserver(() => {
+    const rc = document.getElementById('resultsCard');
+    const rr = document.getElementById('recommendationResults');
+    if (rc && rr && rr.innerHTML.trim()) {
+        rc.style.display = 'block';
+        rc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+});
+const rr = document.getElementById('recommendationResults');
+if (rr) resultsObserver.observe(rr, { childList: true, subtree: true });
+
+// Simulate ambient stats
+(function ambientStats() {
+    const temps = [28, 30, 32, 29, 31, 33, 27];
+    const hums  = [62, 65, 68, 70, 64, 67, 71];
+    let i = 0;
+    function tick() {
+        document.getElementById('statTemp').textContent = temps[i % temps.length] + '°C';
+        document.getElementById('statHumidity').textContent = hums[i % hums.length] + '%';
+        i++;
+        setTimeout(tick, 4000);
+    }
+    tick();
+})();
+
+// Init disease detection module
+if (typeof initDiseaseDetection === 'function') initDiseaseDetection();
+
+// Init voice assistant module
+if (typeof initVoiceAssistant === 'function') initVoiceAssistant();
+
+// Animate loader steps when visible
+(function loaderStepAnim() {
+    const steps = ['ddStep1','ddStep2','ddStep3','ddStep4'];
+    let si = 0, timer = null;
+    const loader = document.getElementById('ddLoader');
+    if (!loader) return;
+    const obs = new MutationObserver(() => {
+        if (loader.style.display !== 'none') {
+            si = 0;
+            steps.forEach(id => { const el = document.getElementById(id); if(el) el.className='dd-step'; });
+            const el0 = document.getElementById(steps[0]); if(el0) el0.className='dd-step active';
+            clearInterval(timer);
+            timer = setInterval(() => {
+                si++;
+                if (si < steps.length) {
+                    const el = document.getElementById(steps[si]); if(el) el.className='dd-step active';
+                } else {
+                    clearInterval(timer);
+                }
+            }, 550);
+        } else {
+            clearInterval(timer);
+        }
+    });
+    obs.observe(loader, { attributes: true, attributeFilter: ['style'] });
+})();
+</script>
+</body>
+</html>

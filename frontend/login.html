@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropXAI – Smart Farming AI | Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+    <!-- Background image -->
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+
+    <!-- Welcome text (left side) -->
+    <div class="welcome-overlay">
+        <div class="welcome-badge">🌾 AI-Powered Agriculture</div>
+        <h1 class="welcome-title">
+            Welcome to<br>
+            <span class="brand-name">CropXAI</span>
+        </h1>
+        <p class="welcome-subtitle">
+            Smart farming decisions powered by<br>
+            Explainable Artificial Intelligence
+        </p>
+        <div class="stats-row">
+            <div class="stat-chip">
+                <span class="stat-num" data-target="50">0</span>+
+                <span class="stat-label">Crops</span>
+            </div>
+            <div class="stat-chip">
+                <span class="stat-num" data-target="98">0</span>%
+                <span class="stat-label">Accuracy</span>
+            </div>
+            <div class="stat-chip">
+                <span class="stat-num" data-target="12">0</span>K+
+                <span class="stat-label">Farmers</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN PANEL (right side) -->
+    <div class="login-panel">
+        <div class="login-card" id="loginCard">
+
+            <!-- Logo -->
+            <div class="card-logo">
+                <div class="logo-icon">🌾</div>
+                <div class="logo-text">
+                    <span class="logo-crop">Crop</span><span class="logo-xai">XAI</span>
+                </div>
+            </div>
+
+            <!-- Tab switcher -->
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+                <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form class="auth-form active" id="formLogin" autocomplete="off" novalidate>
+                <div class="form-title">
+                    <h2>Welcome back 👋</h2>
+                    <p>Sign in to your farming dashboard</p>
+                </div>
+
+                <div class="input-group" id="ig-username">
+                    <label for="loginUsername">Username</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="loginUsername" placeholder="Enter your username" autocomplete="username">
+                    </div>
+                    <span class="field-error" id="err-username"></span>
+                </div>
+
+                <div class="input-group" id="ig-password">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
+                        <button type="button" class="toggle-pw" onclick="togglePassword('loginPassword', this)" aria-label="Toggle password">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                    <span class="field-error" id="err-password"></span>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-link" onclick="switchTab('forgot'); return false;">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnLogin">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader" style="display:none">
+                        <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </span>
+                </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form class="auth-form" id="formRegister" autocomplete="off" novalidate>
+                <div class="form-title">
+                    <h2>Join CropXAI 🌱</h2>
+                    <p>Create your free farmer account</p>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="input-group">
+                        <label for="regName">Full Name</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🧑‍🌾</span>
+                            <input type="text" id="regName" placeholder="Your full name">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="regUsername">Username</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="regUsername" placeholder="Choose username">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="input-group">
+                        <label for="regPassword">Password</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="regPassword" placeholder="Min 6 characters">
+                            <button type="button" class="toggle-pw" onclick="togglePassword('regPassword', this)" aria-label="Toggle password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="regConfirm">Confirm Password</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🔐</span>
+                            <input type="password" id="regConfirm" placeholder="Repeat password">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password strength -->
+                <div class="pw-strength" id="pwStrength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="strength-label" id="strengthLabel">Password strength</span>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnRegister">
+                    <span class="btn-text">Create Account</span>
+                    <span class="btn-loader" style="display:none">
+                        <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </span>
+                </button>
+            </form>
+
+            <!-- FORGOT PASSWORD FORM -->
+            <form class="auth-form" id="formForgot" autocomplete="off" novalidate>
+                <div class="form-title">
+                    <h2>Reset Password 🔑</h2>
+                    <p>Enter your username to reset your password</p>
+                </div>
+
+                <div class="input-group">
+                    <label for="resetUsername">Username</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="resetUsername" placeholder="Your username">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="resetNewPw">New Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="resetNewPw" placeholder="New password">
+                        <button type="button" class="toggle-pw" onclick="togglePassword('resetNewPw', this)" aria-label="Toggle password">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <span class="btn-text">Reset Password</span>
+                </button>
+
+                <button type="button" class="btn-back" onclick="switchTab('login')">
+                    ← Back to Sign In
+                </button>
+            </form>
+
+            <!-- Toast notification -->
+            <div class="toast" id="toast"></div>
+
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+</html>
