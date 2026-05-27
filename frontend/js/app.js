@@ -172,37 +172,34 @@ function showProfile() {
 }
 
 // ── Auto-detect Soil Parameters ───────────────────────────────────────────────
-autoPhBtn.addEventListener('click', () => {
+// Individual Auto buttons are upgraded by soilAutoDetect.js to fill ALL fields
+// at once with animation. The handlers below are kept as a safe fallback in
+// case soilAutoDetect.js hasn't loaded yet.
+function _legacyAutoFill(fieldId) {
     const climate  = document.getElementById('climate').value;
     const soilType = document.getElementById('soilType').value;
     if (!climate || !soilType) { alert('Please select Climate and Soil Type first.'); return; }
-    const params = autoDetectSoilParameters(climate, soilType);
-    if (params) document.getElementById('soilPh').value = params.ph.toFixed(1);
-});
+    // Prefer the new module if available
+    if (typeof window.triggerSoilAutoDetect === 'function') {
+        window.triggerSoilAutoDetect(true);
+        return;
+    }
+    // Fallback: fill just the requested field
+    const params = (typeof autoDetectSoilParameters === 'function')
+        ? autoDetectSoilParameters(climate, soilType)
+        : null;
+    if (!params) return;
+    const map = { soilPh: 'ph', nitrogen: 'nitrogen', phosphorus: 'phosphorus', potassium: 'potassium' };
+    const key = map[fieldId];
+    if (key && params[key] !== undefined) {
+        document.getElementById(fieldId).value = params[key].toFixed(1);
+    }
+}
 
-autoNBtn.addEventListener('click', () => {
-    const climate  = document.getElementById('climate').value;
-    const soilType = document.getElementById('soilType').value;
-    if (!climate || !soilType) { alert('Please select Climate and Soil Type first.'); return; }
-    const params = autoDetectSoilParameters(climate, soilType);
-    if (params) document.getElementById('nitrogen').value = params.nitrogen.toFixed(1);
-});
-
-autoPBtn.addEventListener('click', () => {
-    const climate  = document.getElementById('climate').value;
-    const soilType = document.getElementById('soilType').value;
-    if (!climate || !soilType) { alert('Please select Climate and Soil Type first.'); return; }
-    const params = autoDetectSoilParameters(climate, soilType);
-    if (params) document.getElementById('phosphorus').value = params.phosphorus.toFixed(1);
-});
-
-autoKBtn.addEventListener('click', () => {
-    const climate  = document.getElementById('climate').value;
-    const soilType = document.getElementById('soilType').value;
-    if (!climate || !soilType) { alert('Please select Climate and Soil Type first.'); return; }
-    const params = autoDetectSoilParameters(climate, soilType);
-    if (params) document.getElementById('potassium').value = params.potassium.toFixed(1);
-});
+if (autoPhBtn) autoPhBtn.addEventListener('click', () => _legacyAutoFill('soilPh'));
+if (autoNBtn)  autoNBtn.addEventListener('click',  () => _legacyAutoFill('nitrogen'));
+if (autoPBtn)  autoPBtn.addEventListener('click',  () => _legacyAutoFill('phosphorus'));
+if (autoKBtn)  autoKBtn.addEventListener('click',  () => _legacyAutoFill('potassium'));
 
 // ── Info Buttons ──────────────────────────────────────────────────────────────
 document.getElementById('phInfoBtn').addEventListener('click', () => {
