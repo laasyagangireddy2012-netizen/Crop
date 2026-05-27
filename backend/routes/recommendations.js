@@ -1,7 +1,7 @@
 // Recommendation Routes
 const express = require('express');
 const router = express.Router();
-const ExplainableAI = require('../services/explainableAI');
+const {ExplainableAI} = require('../services/explainableAI');
 const cropDatabase = require('../data/cropDatabase');
 const Recommendation = require('../models/Recommendation');
 
