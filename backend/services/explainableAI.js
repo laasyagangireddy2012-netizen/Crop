@@ -149,4 +149,4 @@ class ExplainableAI {
     }
 }
 
-const explainableAI = new ExplainableAI();
+module.exports = {ExplainableAI};
