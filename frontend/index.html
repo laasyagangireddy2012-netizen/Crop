@@ -42,48 +42,61 @@
 
     <!-- Navigation -->
     <nav class="sidebar-nav">
-        <span class="nav-section-label">MAIN MENU</span>
+        <span class="nav-section-label" data-i18n="navMainMenu">MAIN MENU</span>
 
         <a href="#" class="nav-item active" data-section="dashboard" onclick="switchSection('dashboard',this)">
             <span class="nav-icon">🏠</span>
-            <span class="nav-label">Dashboard</span>
+            <span class="nav-label" data-i18n="navDashboard">Dashboard</span>
         </a>
         <a href="#" class="nav-item" data-section="crop-prediction" onclick="switchSection('crop-prediction',this)">
             <span class="nav-icon">🌾</span>
-            <span class="nav-label">Crop Prediction</span>
+            <span class="nav-label" data-i18n="navCropPrediction">Crop Prediction</span>
         </a>
         <a href="#" class="nav-item" data-section="soil-analysis" onclick="switchSection('soil-analysis',this)">
             <span class="nav-icon">🧪</span>
-            <span class="nav-label">Soil Analysis</span>
+            <span class="nav-label" data-i18n="navSoilAnalysis">Soil Analysis</span>
         </a>
         <a href="#" class="nav-item" data-section="weather" onclick="switchSection('weather',this)">
             <span class="nav-icon">🌤️</span>
-            <span class="nav-label">Weather</span>
+            <span class="nav-label" data-i18n="navWeather">Weather</span>
         </a>
         <a href="#" class="nav-item" data-section="disease-detection" onclick="switchSection('disease-detection',this)">
             <span class="nav-icon">🔬</span>
-            <span class="nav-label">Disease Detection</span>
+            <span class="nav-label" data-i18n="navDiseaseDetection">Disease Detection</span>
             <span class="nav-badge">AI</span>
         </a>
 
-        <span class="nav-section-label">TOOLS</span>
+        <span class="nav-section-label" data-i18n="navTools">TOOLS</span>
 
         <a href="#" class="nav-item" id="navVoiceBtn" onclick="openVoiceAssistant(); return false;">
             <span class="nav-icon">🎤</span>
-            <span class="nav-label">Voice Assistant</span>
+            <span class="nav-label" data-i18n="navVoiceAssistant">Voice Assistant</span>
             <span class="nav-badge">AI</span>
         </a>
 
-        <span class="nav-section-label">ACCOUNT</span>
+        <span class="nav-section-label" data-i18n="navAccount">ACCOUNT</span>
 
         <a href="#" class="nav-item" id="navProfileBtn" onclick="showProfile(); return false;">
             <span class="nav-icon">👤</span>
-            <span class="nav-label">Profile</span>
+            <span class="nav-label" data-i18n="profile">Profile</span>
         </a>
         <a href="#" class="nav-item nav-item-danger" id="navLogoutBtn">
             <span class="nav-icon">🚪</span>
-            <span class="nav-label">Logout</span>
+            <span class="nav-label" data-i18n="logout">Logout</span>
         </a>
+
+        <!-- Language Selector -->
+        <span class="nav-section-label" data-i18n="navLanguage">LANGUAGE</span>
+        <div class="sidebar-lang-wrap">
+            <span class="sidebar-lang-globe">🌐</span>
+            <select id="langSelector" class="sidebar-lang-select" aria-label="Select language">
+                <option value="en">🇬🇧 English</option>
+                <option value="te">🇮🇳 తెలుగు</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="ta">🇮🇳 தமிழ்</option>
+                <option value="kn">🇮🇳 ಕನ್ನಡ</option>
+            </select>
+        </div>
     </nav>
 </aside>
 
@@ -195,12 +208,12 @@
             <div class="card" id="inputCard">
                 <div class="card-header">
                     <span class="card-icon">📋</span>
-                    <h3>Enter Your Farm Details</h3>
+                    <h3 data-i18n="inputTitle">Enter Your Farm Details</h3>
                 </div>
                 <div class="card-body">
 
                     <div class="form-group">
-                        <label>📍 Location (District / City)</label>
+                        <label data-i18n="location">📍 Location (District / City)</label>
                         <div class="loc-status-badge loc-idle" id="locStatusBadge">
                             <span id="locStatusIcon">📍</span>
                             <span id="locStatusText">Location not set</span>
@@ -242,30 +255,30 @@
                     </div>
 
                     <div class="form-group">
-                        <label>🗓️ Season</label>
+                        <label data-i18n="season">🗓️ Season</label>
                         <select id="season" required>
-                            <option value="">Select Season</option>
-                            <option value="kharif">Kharif (Monsoon)</option>
-                            <option value="rabi">Rabi (Winter)</option>
-                            <option value="zaid">Zaid (Summer)</option>
+                            <option value="" data-i18n="selectSeason">Select Season</option>
+                            <option value="kharif" data-i18n="kharif">Kharif (Monsoon)</option>
+                            <option value="rabi" data-i18n="rabi">Rabi (Winter)</option>
+                            <option value="zaid" data-i18n="zaid">Zaid (Summer)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>🌱 Soil Type</label>
+                        <label data-i18n="soilType">🌱 Soil Type</label>
                         <select id="soilType" required>
-                            <option value="">Select Soil Type</option>
-                            <option value="clay">Clay</option>
-                            <option value="sandy">Sandy</option>
-                            <option value="loamy">Loamy</option>
-                            <option value="black">Black</option>
-                            <option value="red">Red</option>
-                            <option value="alluvial">Alluvial</option>
+                            <option value="" data-i18n="selectSoilType">Select Soil Type</option>
+                            <option value="clay" data-i18n="clay">Clay</option>
+                            <option value="sandy" data-i18n="sandy">Sandy</option>
+                            <option value="loamy" data-i18n="loamy">Loamy</option>
+                            <option value="black" data-i18n="black">Black</option>
+                            <option value="red" data-i18n="red">Red</option>
+                            <option value="alluvial" data-i18n="alluvial">Alluvial</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>⚗️ Soil pH Value</label>
+                        <label data-i18n="soilPh">⚗️ Soil pH Value</label>
                         <div class="input-row">
                             <input type="number" id="soilPh" min="3" max="10" step="0.1" placeholder="6.5" required>
                             <button type="button" class="icon-btn info-btn" id="phInfoBtn" title="pH Info">ℹ️</button>
@@ -686,12 +699,11 @@
     <option value="en">English</option>
 </select>
 
-<script src="cropData.js"></script>
-<script src="soilData.js"></script>
-<script src="translations.js"></script>
-<script src="diseaseDatabase.js"></script>
-
-<script src="explainableAI.js"></script>
+<script src="../cropData.js"></script>
+<script src="../soilData.js"></script>
+<script src="../translations.js"></script>
+<script src="../diseaseDatabase.js"></script>
+<script src="../explainableAI.js"></script>
 
 <script src="js/location.js"></script>
 <script src="js/soilAutoDetect.js"></script>

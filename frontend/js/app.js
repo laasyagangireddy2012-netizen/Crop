@@ -248,6 +248,11 @@ const CROP_ENRICH = {
     potato:    { icon:'🥔', yieldRange:'8–12 t/acre', water:'Medium (500–700 mm)', season:'Rabi (Oct–Mar)',  profit:'₹50,000–₹90,000/acre' }
 };
 
+// ── ML Backend configuration ──────────────────────────────────────────────────
+// Set ML_BACKEND_URL to your deployed FastAPI URL (e.g. https://your-app.onrender.com)
+// Leave as empty string to skip ML backend and use the JS engine directly.
+const ML_BACKEND_URL = '';   // ← paste deployed URL here when available
+
 // ── Validation helper ─────────────────────────────────────────────────────────
 function _showRecError(msg) {
     const el = document.getElementById('recommendValidationError');
@@ -255,7 +260,7 @@ function _showRecError(msg) {
     el.textContent = '⚠️ ' + msg;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    setTimeout(() => { el.style.display = 'none'; }, 6000);
+    setTimeout(() => { el.style.display = 'none'; }, 8000);
 }
 
 function _clearRecError() {
@@ -286,52 +291,157 @@ function _setRecommendLoading(loading) {
 
 // ── NPK normalisation ─────────────────────────────────────────────────────────
 // The form collects NPK as 0–100 % (relative availability).
-// cropData.js stores NPK as kg/ha ranges (e.g. N: [80,120]).
-// We normalise the form value to kg/ha by scaling to the crop's midpoint range
-// so the scoring engine can compare apples-to-apples.
-// Formula: formPct (0-100) → kg/ha = formPct / 100 * NPK_SCALE
-const NPK_SCALE = { n: 300, p: 150, k: 200 }; // max realistic kg/ha for each nutrient
+// cropData.js / ML backend both use kg/ha ranges (e.g. N: [80,120]).
+// Scale: formPct (0-100) → kg/ha = formPct / 100 * NPK_SCALE
+const NPK_SCALE = { n: 300, p: 150, k: 200 };
 
 function _normNPK(pct, nutrient) {
     return (pct / 100) * NPK_SCALE[nutrient];
 }
 
+// ── Call ML backend (FastAPI/XGBoost) ────────────────────────────────────────
+async function _callMLBackend(payload) {
+    const url = (ML_BACKEND_URL || '').replace(/\/$/, '') + '/predict';
+    console.log('[Recommend][ML] POST', url, payload);
+
+    const resp = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+        signal:  AbortSignal.timeout(10000)   // 10 s timeout
+    });
+
+    if (!resp.ok) {
+        const errText = await resp.text().catch(() => resp.statusText);
+        throw new Error(`ML backend returned ${resp.status}: ${errText}`);
+    }
+
+    const data = await resp.json();
+    console.log('[Recommend][ML] Response:', data);
+    return data;
+}
+
+// ── Convert ML backend response → internal results array ─────────────────────
+function _mlResponseToResults(mlData) {
+    // mlData: { best_crop, confidence, top_3: [{crop, confidence, rank}], feature_importance }
+    if (!mlData || !mlData.top_3 || !Array.isArray(mlData.top_3)) {
+        throw new Error('Unexpected ML backend response format.');
+    }
+
+    // Build a results array that matches what displayAllRecommendations expects
+    const results = mlData.top_3.map((item, idx) => {
+        const cropKey = item.crop.toLowerCase();
+        const crop    = (typeof cropDatabase !== 'undefined' && cropDatabase[cropKey])
+            ? cropDatabase[cropKey]
+            : _makeFallbackCrop(item.crop);
+
+        // Build feature scores from feature_importance if available
+        const fi = mlData.feature_importance || {};
+        const scores = {
+            climate:    fi.climate    !== undefined ? fi.climate    * 100 : 70,
+            season:     fi.season     !== undefined ? fi.season     * 100 : 70,
+            soilType:   fi.soil_type  !== undefined ? fi.soil_type  * 100 : 70,
+            ph:         fi.soil_ph    !== undefined ? fi.soil_ph    * 100 : 70,
+            nitrogen:   fi.nitrogen   !== undefined ? fi.nitrogen   * 100 : 70,
+            phosphorus: fi.phosphorus !== undefined ? fi.phosphorus * 100 : 70,
+            potassium:  fi.potassium  !== undefined ? fi.potassium  * 100 : 70,
+        };
+
+        return { cropKey, crop, scores, confidence: Math.round(item.confidence) };
+    });
+
+    // Fill remaining crops from cropDatabase at lower confidence
+    if (typeof cropDatabase !== 'undefined') {
+        const topKeys = new Set(results.map(r => r.cropKey));
+        Object.entries(cropDatabase).forEach(([cropKey, crop]) => {
+            if (!topKeys.has(cropKey)) {
+                results.push({ cropKey, crop, scores: {}, confidence: 0 });
+            }
+        });
+    }
+
+    return results;
+}
+
+// ── Minimal fallback crop object when cropDatabase isn't loaded ───────────────
+function _makeFallbackCrop(name) {
+    return {
+        name:        { en: name, te: name, hi: name },
+        climate:     [],
+        season:      [],
+        soilType:    [],
+        phRange:     [6.0, 7.5],
+        npk:         { n: [80, 120], p: [40, 60], k: [40, 60] },
+        irrigation:  { en: '—', te: '—', hi: '—' },
+        fertilizers: { en: '—', te: '—', hi: '—' },
+        explanation: { en: 'Recommended by AI model.', te: '—', hi: '—' },
+        irrigationSchedule: { en: [] }
+    };
+}
+
+// ── JS-engine fallback ────────────────────────────────────────────────────────
+function _runJSEngine(inputs) {
+    console.log('[Recommend][JS] Running local explainableAI engine...');
+
+    if (typeof explainableAI === 'undefined') {
+        throw new Error(
+            'explainableAI is not defined. ' +
+            'Check that explainableAI.js loaded correctly (open DevTools → Network tab).'
+        );
+    }
+    if (typeof cropDatabase === 'undefined') {
+        throw new Error(
+            'cropDatabase is not defined. ' +
+            'Check that cropData.js loaded correctly (open DevTools → Network tab).'
+        );
+    }
+
+    const results = explainableAI.analyzeAllCrops(inputs, cropDatabase);
+    console.log('[Recommend][JS] Results count:', results.length,
+                '| Top:', results[0]?.cropKey, '@', results[0]?.confidence + '%');
+
+    if (!results || results.length === 0) {
+        throw new Error('analyzeAllCrops returned no results. Check your input values.');
+    }
+    return results;
+}
+
 // ── Main recommendation handler ───────────────────────────────────────────────
-recommendBtn.addEventListener('click', () => {
+recommendBtn.addEventListener('click', async () => {
     _clearRecError();
 
-    // Read required fields
-    const climate    = document.getElementById('climate').value;
-    const area       = parseFloat(document.getElementById('area').value);
-    const season     = document.getElementById('season').value;
-    const soilType   = document.getElementById('soilType').value;
-    const soilPh     = parseFloat(document.getElementById('soilPh').value);
+    // ── Read required fields ──────────────────────────────────────────────
+    const climate       = document.getElementById('climate').value;
+    const area          = parseFloat(document.getElementById('area').value);
+    const season        = document.getElementById('season').value;
+    const soilType      = document.getElementById('soilType').value;
+    const soilPh        = parseFloat(document.getElementById('soilPh').value);
     const nitrogenPct   = parseFloat(document.getElementById('nitrogen').value);
     const phosphorusPct = parseFloat(document.getElementById('phosphorus').value);
     const potassiumPct  = parseFloat(document.getElementById('potassium').value);
 
-    // Read optional environmental fields
-    const tempEl     = document.getElementById('temperature');
-    const humEl      = document.getElementById('humidity');
-    const rainEl     = document.getElementById('rainfall');
+    // ── Read optional environmental fields ────────────────────────────────
+    const tempEl      = document.getElementById('temperature');
+    const humEl       = document.getElementById('humidity');
+    const rainEl      = document.getElementById('rainfall');
     const temperature = tempEl  && tempEl.value  !== '' ? parseFloat(tempEl.value)  : null;
     const humidity    = humEl   && humEl.value   !== '' ? parseFloat(humEl.value)   : null;
     const rainfall    = rainEl  && rainEl.value  !== '' ? parseFloat(rainEl.value)  : null;
 
-    console.log('[Recommend] Input values:', {
+    console.log('[Recommend] Raw form values:', {
         climate, area, season, soilType, soilPh,
         nitrogenPct, phosphorusPct, potassiumPct,
         temperature, humidity, rainfall
     });
 
-    // ── Validation ────────────────────────────────────────────────────────────
+    // ── Validation ────────────────────────────────────────────────────────
     const missing = [];
-    if (!climate)           missing.push('Climate');
-    if (!season)            missing.push('Season');
-    if (!soilType)          missing.push('Soil Type');
+    if (!climate)             missing.push('Climate');
+    if (!season)              missing.push('Season');
+    if (!soilType)            missing.push('Soil Type');
     if (isNaN(area) || area <= 0) missing.push('Area (must be > 0)');
-    if (isNaN(soilPh))      missing.push('Soil pH');
-    if (isNaN(nitrogenPct)) missing.push('Nitrogen (N)');
+    if (isNaN(soilPh))        missing.push('Soil pH');
+    if (isNaN(nitrogenPct))   missing.push('Nitrogen (N)');
     if (isNaN(phosphorusPct)) missing.push('Phosphorus (P)');
     if (isNaN(potassiumPct))  missing.push('Potassium (K)');
 
@@ -341,7 +451,6 @@ recommendBtn.addEventListener('click', () => {
         return;
     }
 
-    // Range checks
     if (soilPh < 3 || soilPh > 10) {
         _showRecError('Soil pH must be between 3 and 10.');
         return;
@@ -353,77 +462,94 @@ recommendBtn.addEventListener('click', () => {
         return;
     }
 
-    // ── Normalise NPK from % to kg/ha for scoring ─────────────────────────────
+    // ── Normalise NPK % → kg/ha ───────────────────────────────────────────
     const nitrogen   = _normNPK(nitrogenPct,   'n');
     const phosphorus = _normNPK(phosphorusPct, 'p');
     const potassium  = _normNPK(potassiumPct,  'k');
 
     console.log('[Recommend] Normalised NPK (kg/ha):', { nitrogen, phosphorus, potassium });
 
-    // ── Build inputs object ───────────────────────────────────────────────────
+    // ── Build inputs object ───────────────────────────────────────────────
     const inputs = {
         climate, area, season, soilType, soilPh,
         nitrogen, phosphorus, potassium,
-        // Store original % values for display
         nitrogenPct, phosphorusPct, potassiumPct,
-        // Optional environmental
         temperature, humidity, rainfall
     };
 
-    // ── Show loading state ────────────────────────────────────────────────────
+    // ── Show loading ──────────────────────────────────────────────────────
     _setRecommendLoading(true);
 
-    // Use setTimeout to allow the browser to repaint (show spinner) before
-    // the synchronous AI computation blocks the thread
-    setTimeout(() => {
-        try {
-            console.log('[Recommend] Running explainableAI.analyzeAllCrops...');
+    let results = null;
+    let engineUsed = 'JS';
 
-            if (typeof explainableAI === 'undefined' || typeof cropDatabase === 'undefined') {
-                throw new Error('AI engine or crop database not loaded. Please refresh the page.');
+    try {
+        // ── Try ML backend first (if URL is configured) ───────────────────
+        if (ML_BACKEND_URL && ML_BACKEND_URL.trim() !== '') {
+            try {
+                const mlPayload = {
+                    climate:    climate,
+                    season:     season,
+                    soil_type:  soilType,
+                    soil_ph:    soilPh,
+                    nitrogen:   nitrogen,
+                    phosphorus: phosphorus,
+                    potassium:  potassium,
+                    area:       area
+                };
+                console.log('[Recommend] Trying ML backend at:', ML_BACKEND_URL);
+                const mlData = await _callMLBackend(mlPayload);
+                results  = _mlResponseToResults(mlData);
+                engineUsed = 'XGBoost ML';
+                console.log('[Recommend] ✅ ML backend succeeded');
+            } catch (mlErr) {
+                console.warn('[Recommend] ML backend failed, falling back to JS engine:', mlErr.message);
+                // Fall through to JS engine
             }
-
-            const results = explainableAI.analyzeAllCrops(inputs, cropDatabase);
-
-            console.log('[Recommend] Results count:', results.length);
-            console.log('[Recommend] Top result:', results[0]?.cropKey, '— confidence:', results[0]?.confidence);
-
-            if (!results || results.length === 0) {
-                throw new Error('No crop results returned. Please check your inputs.');
-            }
-
-            displayAllRecommendations(results, inputs);
-
-            // Show and scroll to results card
-            const rc = document.getElementById('resultsCard');
-            if (rc) {
-                rc.style.display = 'block';
-                // Small delay so the DOM has painted before scrolling
-                setTimeout(() => {
-                    rc.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 80);
-            }
-
-            console.log('[Recommend] ✅ Recommendation displayed successfully');
-
-        } catch (err) {
-            console.error('[Recommend] ❌ Error during recommendation:', err);
-            _showRecError('Prediction failed: ' + err.message);
-        } finally {
-            _setRecommendLoading(false);
         }
-    }, 50);
+
+        // ── JS engine (primary when no backend URL, fallback otherwise) ───
+        if (!results) {
+            results    = _runJSEngine(inputs);
+            engineUsed = 'JS (local)';
+        }
+
+        console.log('[Recommend] Engine used:', engineUsed,
+                    '| Results:', results.length,
+                    '| Best:', results[0]?.cropKey, '@', results[0]?.confidence + '%');
+
+        displayAllRecommendations(results, inputs, engineUsed);
+
+        // Show and scroll to results card
+        const rc = document.getElementById('resultsCard');
+        if (rc) {
+            rc.style.display = 'block';
+            setTimeout(() => rc.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        }
+
+        console.log('[Recommend] ✅ Recommendation displayed successfully');
+
+    } catch (err) {
+        console.error('[Recommend] ❌ Fatal error:', err);
+        _showRecError(
+            'Prediction failed: ' + err.message +
+            ' — Open browser DevTools (F12) → Console for details.'
+        );
+    } finally {
+        _setRecommendLoading(false);
+    }
 });
 
 // ── Display ALL ranked recommendations ───────────────────────────────────────
-function displayAllRecommendations(results, inputs) {
+function displayAllRecommendations(results, inputs, engineUsed) {
     const container = document.getElementById('recommendationResults');
     if (!container) {
         console.error('[Recommend] recommendationResults container not found in DOM');
         return;
     }
 
-    console.log('[Recommend] Rendering', results.length, 'results. Best:', results[0]?.cropKey);
+    console.log('[Recommend] Rendering', results.length, 'results. Best:', results[0]?.cropKey,
+                '| Engine:', engineUsed || 'JS');
 
     // Stop any ongoing speech when new results are rendered
     if (_ttsActive) _ttsStop();
@@ -504,7 +630,9 @@ function displayAllRecommendations(results, inputs) {
 
     html += `
     <div class="cr-best-wrap" id="crBestCard">
-        <div class="cr-best-badge">🏆 Best Recommended Crop</div>
+        <div class="cr-best-badge">🏆 Best Recommended Crop
+            <span class="cr-engine-badge">${engineUsed && engineUsed.includes('XGBoost') ? '🤖 XGBoost ML' : '🧠 AI Engine'}</span>
+        </div>
         <div class="cr-best-header">
             <div class="cr-best-icon">${bestEnrich.icon}</div>
             <div class="cr-best-info">

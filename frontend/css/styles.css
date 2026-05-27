@@ -3245,3 +3245,18 @@ html, body {
     padding-top: 14px;
     margin-top: 14px;
 }
+
+
+/* ── Engine badge on results card ─────────────────────────────────────────── */
+.cr-engine-badge {
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(72,187,120,0.15);
+    border: 1px solid rgba(72,187,120,0.3);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 10px;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
