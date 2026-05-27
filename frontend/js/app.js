@@ -248,52 +248,208 @@ const CROP_ENRICH = {
     potato:    { icon:'🥔', yieldRange:'8–12 t/acre', water:'Medium (500–700 mm)', season:'Rabi (Oct–Mar)',  profit:'₹50,000–₹90,000/acre' }
 };
 
-recommendBtn.addEventListener('click', () => {
-    const inputs = {
-        climate:    document.getElementById('climate').value,
-        area:       parseFloat(document.getElementById('area').value),
-        season:     document.getElementById('season').value,
-        soilType:   document.getElementById('soilType').value,
-        soilPh:     parseFloat(document.getElementById('soilPh').value),
-        nitrogen:   parseFloat(document.getElementById('nitrogen').value),
-        phosphorus: parseFloat(document.getElementById('phosphorus').value),
-        potassium:  parseFloat(document.getElementById('potassium').value)
-    };
+// ── Validation helper ─────────────────────────────────────────────────────────
+function _showRecError(msg) {
+    const el = document.getElementById('recommendValidationError');
+    if (!el) { alert(msg); return; }
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
 
-    if (!inputs.climate || !inputs.season || !inputs.soilType ||
-        isNaN(inputs.area) || isNaN(inputs.soilPh) ||
-        isNaN(inputs.nitrogen) || isNaN(inputs.phosphorus) || isNaN(inputs.potassium)) {
-        alert('Please fill in all farm details before getting a recommendation.');
+function _clearRecError() {
+    const el = document.getElementById('recommendValidationError');
+    if (el) el.style.display = 'none';
+}
+
+// ── Button loading state ──────────────────────────────────────────────────────
+function _setRecommendLoading(loading) {
+    const btn     = document.getElementById('recommendBtn');
+    const btnText = document.getElementById('recommendBtnText');
+    const spinner = document.getElementById('recommendBtnSpinner');
+    if (!btn) return;
+    if (loading) {
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        if (btnText)  btnText.style.display  = 'none';
+        if (spinner)  spinner.style.display  = 'inline-flex';
+        console.log('[Recommend] Loading state ON');
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        if (btnText)  btnText.style.display  = 'inline';
+        if (spinner)  spinner.style.display  = 'none';
+        console.log('[Recommend] Loading state OFF');
+    }
+}
+
+// ── NPK normalisation ─────────────────────────────────────────────────────────
+// The form collects NPK as 0–100 % (relative availability).
+// cropData.js stores NPK as kg/ha ranges (e.g. N: [80,120]).
+// We normalise the form value to kg/ha by scaling to the crop's midpoint range
+// so the scoring engine can compare apples-to-apples.
+// Formula: formPct (0-100) → kg/ha = formPct / 100 * NPK_SCALE
+const NPK_SCALE = { n: 300, p: 150, k: 200 }; // max realistic kg/ha for each nutrient
+
+function _normNPK(pct, nutrient) {
+    return (pct / 100) * NPK_SCALE[nutrient];
+}
+
+// ── Main recommendation handler ───────────────────────────────────────────────
+recommendBtn.addEventListener('click', () => {
+    _clearRecError();
+
+    // Read required fields
+    const climate    = document.getElementById('climate').value;
+    const area       = parseFloat(document.getElementById('area').value);
+    const season     = document.getElementById('season').value;
+    const soilType   = document.getElementById('soilType').value;
+    const soilPh     = parseFloat(document.getElementById('soilPh').value);
+    const nitrogenPct   = parseFloat(document.getElementById('nitrogen').value);
+    const phosphorusPct = parseFloat(document.getElementById('phosphorus').value);
+    const potassiumPct  = parseFloat(document.getElementById('potassium').value);
+
+    // Read optional environmental fields
+    const tempEl     = document.getElementById('temperature');
+    const humEl      = document.getElementById('humidity');
+    const rainEl     = document.getElementById('rainfall');
+    const temperature = tempEl  && tempEl.value  !== '' ? parseFloat(tempEl.value)  : null;
+    const humidity    = humEl   && humEl.value   !== '' ? parseFloat(humEl.value)   : null;
+    const rainfall    = rainEl  && rainEl.value  !== '' ? parseFloat(rainEl.value)  : null;
+
+    console.log('[Recommend] Input values:', {
+        climate, area, season, soilType, soilPh,
+        nitrogenPct, phosphorusPct, potassiumPct,
+        temperature, humidity, rainfall
+    });
+
+    // ── Validation ────────────────────────────────────────────────────────────
+    const missing = [];
+    if (!climate)           missing.push('Climate');
+    if (!season)            missing.push('Season');
+    if (!soilType)          missing.push('Soil Type');
+    if (isNaN(area) || area <= 0) missing.push('Area (must be > 0)');
+    if (isNaN(soilPh))      missing.push('Soil pH');
+    if (isNaN(nitrogenPct)) missing.push('Nitrogen (N)');
+    if (isNaN(phosphorusPct)) missing.push('Phosphorus (P)');
+    if (isNaN(potassiumPct))  missing.push('Potassium (K)');
+
+    if (missing.length > 0) {
+        _showRecError('Please fill in: ' + missing.join(', '));
+        console.warn('[Recommend] Validation failed — missing:', missing);
         return;
     }
 
-    const results = explainableAI.analyzeAllCrops(inputs, cropDatabase);
-    displayAllRecommendations(results, inputs);
-
-    if (resultsSection) {
-        resultsSection.style.display = 'block';
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Range checks
+    if (soilPh < 3 || soilPh > 10) {
+        _showRecError('Soil pH must be between 3 and 10.');
+        return;
     }
+    if (nitrogenPct < 0 || nitrogenPct > 100 ||
+        phosphorusPct < 0 || phosphorusPct > 100 ||
+        potassiumPct < 0 || potassiumPct > 100) {
+        _showRecError('Nitrogen, Phosphorus, and Potassium must be between 0 and 100%.');
+        return;
+    }
+
+    // ── Normalise NPK from % to kg/ha for scoring ─────────────────────────────
+    const nitrogen   = _normNPK(nitrogenPct,   'n');
+    const phosphorus = _normNPK(phosphorusPct, 'p');
+    const potassium  = _normNPK(potassiumPct,  'k');
+
+    console.log('[Recommend] Normalised NPK (kg/ha):', { nitrogen, phosphorus, potassium });
+
+    // ── Build inputs object ───────────────────────────────────────────────────
+    const inputs = {
+        climate, area, season, soilType, soilPh,
+        nitrogen, phosphorus, potassium,
+        // Store original % values for display
+        nitrogenPct, phosphorusPct, potassiumPct,
+        // Optional environmental
+        temperature, humidity, rainfall
+    };
+
+    // ── Show loading state ────────────────────────────────────────────────────
+    _setRecommendLoading(true);
+
+    // Use setTimeout to allow the browser to repaint (show spinner) before
+    // the synchronous AI computation blocks the thread
+    setTimeout(() => {
+        try {
+            console.log('[Recommend] Running explainableAI.analyzeAllCrops...');
+
+            if (typeof explainableAI === 'undefined' || typeof cropDatabase === 'undefined') {
+                throw new Error('AI engine or crop database not loaded. Please refresh the page.');
+            }
+
+            const results = explainableAI.analyzeAllCrops(inputs, cropDatabase);
+
+            console.log('[Recommend] Results count:', results.length);
+            console.log('[Recommend] Top result:', results[0]?.cropKey, '— confidence:', results[0]?.confidence);
+
+            if (!results || results.length === 0) {
+                throw new Error('No crop results returned. Please check your inputs.');
+            }
+
+            displayAllRecommendations(results, inputs);
+
+            // Show and scroll to results card
+            const rc = document.getElementById('resultsCard');
+            if (rc) {
+                rc.style.display = 'block';
+                // Small delay so the DOM has painted before scrolling
+                setTimeout(() => {
+                    rc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
+            }
+
+            console.log('[Recommend] ✅ Recommendation displayed successfully');
+
+        } catch (err) {
+            console.error('[Recommend] ❌ Error during recommendation:', err);
+            _showRecError('Prediction failed: ' + err.message);
+        } finally {
+            _setRecommendLoading(false);
+        }
+    }, 50);
 });
 
 // ── Display ALL ranked recommendations ───────────────────────────────────────
 function displayAllRecommendations(results, inputs) {
     const container = document.getElementById('recommendationResults');
-    if (!container) return;
+    if (!container) {
+        console.error('[Recommend] recommendationResults container not found in DOM');
+        return;
+    }
+
+    console.log('[Recommend] Rendering', results.length, 'results. Best:', results[0]?.cropKey);
 
     // Stop any ongoing speech when new results are rendered
     if (_ttsActive) _ttsStop();
 
+    const lang = currentLanguage || 'en';
     const best = results[0];
+
+    // Safe language accessor with fallback to English
+    function _t(obj) {
+        if (!obj) return '—';
+        return obj[lang] || obj['en'] || Object.values(obj)[0] || '—';
+    }
+
     const bestExplanation = explainableAI.generateExplanation(
-        inputs, best.crop, best.scores, best.confidence, currentLanguage
+        inputs, best.crop, best.scores, best.confidence, lang
     );
+
+    console.log('[Recommend] Best explanation:', bestExplanation.summary);
 
     let html = '';
 
     // ── BEST CROP HERO CARD ───────────────────────────────────────────────────
     const bestEnrich = CROP_ENRICH[best.cropKey] || { icon:'🌱', yieldRange:'—', water:'—', season:'—', profit:'—' };
-    const bestSoilAnalysis = getSoilAnalysis(inputs.nitrogen, inputs.phosphorus, inputs.potassium, currentLanguage);
+    const bestSoilAnalysis = (typeof getSoilAnalysis === 'function')
+        ? getSoilAnalysis(inputs.nitrogenPct ?? inputs.nitrogen, inputs.phosphorusPct ?? inputs.phosphorus, inputs.potassiumPct ?? inputs.potassium, lang)
+        : { nitrogen: '—', phosphorus: '—', potassium: '—' };
 
     let bestFeatureHTML = '';
     const featureLabels = { climate:'Climate', season:'Season', soilType:'Soil Type', ph:'Soil pH', nitrogen:'Nitrogen', phosphorus:'Phosphorus', potassium:'Potassium' };
@@ -308,25 +464,42 @@ function displayAllRecommendations(results, inputs) {
     }
 
     let bestRecsHTML = '';
-    if (bestExplanation.recommendations.length > 0) {
+    if (bestExplanation.recommendations && bestExplanation.recommendations.length > 0) {
         bestRecsHTML = '<ul class="cr-recs-list">' +
             bestExplanation.recommendations.map(r => `<li>${r}</li>`).join('') + '</ul>';
     }
 
     let irrigScheduleHTML = '';
-    if (best.crop.irrigationSchedule && best.crop.irrigationSchedule[currentLanguage]) {
+    const irrigSched = best.crop.irrigationSchedule ? (best.crop.irrigationSchedule[lang] || best.crop.irrigationSchedule['en']) : null;
+    if (irrigSched && irrigSched.length > 0) {
         irrigScheduleHTML = `
         <div class="cr-section">
             <div class="cr-section-title">📅 Irrigation Schedule</div>
             <table class="cr-irrig-table">
                 <thead><tr><th>Stage</th><th>Days</th><th>Frequency</th><th>Depth</th></tr></thead>
                 <tbody>
-                ${best.crop.irrigationSchedule[currentLanguage].map(s => `
+                ${irrigSched.map(s => `
                     <tr><td><strong>${s.stage}</strong></td><td>${s.days}</td><td>${s.frequency}</td><td>${s.depth}</td></tr>
                 `).join('')}
                 </tbody>
             </table>
         </div>`;
+    }
+
+    // Environmental conditions row (only if provided)
+    let envHTML = '';
+    const envItems = [];
+    if (inputs.temperature !== null && inputs.temperature !== undefined && !isNaN(inputs.temperature)) {
+        envItems.push(`<div class="cr-qs-item"><span class="cr-qs-icon">🌡️</span><span class="cr-qs-val">${inputs.temperature}°C</span><span class="cr-qs-lbl">Temperature</span></div>`);
+    }
+    if (inputs.humidity !== null && inputs.humidity !== undefined && !isNaN(inputs.humidity)) {
+        envItems.push(`<div class="cr-qs-item"><span class="cr-qs-icon">💧</span><span class="cr-qs-val">${inputs.humidity}%</span><span class="cr-qs-lbl">Humidity</span></div>`);
+    }
+    if (inputs.rainfall !== null && inputs.rainfall !== undefined && !isNaN(inputs.rainfall)) {
+        envItems.push(`<div class="cr-qs-item"><span class="cr-qs-icon">🌧️</span><span class="cr-qs-val">${inputs.rainfall} mm</span><span class="cr-qs-lbl">Rainfall</span></div>`);
+    }
+    if (envItems.length > 0) {
+        envHTML = `<div class="cr-quick-stats cr-env-stats">${envItems.join('')}</div>`;
     }
 
     html += `
@@ -335,9 +508,9 @@ function displayAllRecommendations(results, inputs) {
         <div class="cr-best-header">
             <div class="cr-best-icon">${bestEnrich.icon}</div>
             <div class="cr-best-info">
-                <h2 class="cr-best-name">${best.crop.name[currentLanguage]}</h2>
+                <h2 class="cr-best-name">${_t(best.crop.name)}</h2>
                 <p class="cr-best-why">${bestExplanation.summary}</p>
-                <p class="cr-best-expl">${best.crop.explanation[currentLanguage]}</p>
+                <p class="cr-best-expl">${_t(best.crop.explanation)}</p>
             </div>
             <div class="cr-best-score-wrap">
                 <svg class="cr-score-ring" viewBox="0 0 80 80">
@@ -359,6 +532,7 @@ function displayAllRecommendations(results, inputs) {
             <div class="cr-qs-item"><span class="cr-qs-icon">🗓️</span><span class="cr-qs-val">${bestEnrich.season}</span><span class="cr-qs-lbl">Growing Season</span></div>
             <div class="cr-qs-item"><span class="cr-qs-icon">💰</span><span class="cr-qs-val">${bestEnrich.profit}</span><span class="cr-qs-lbl">Est. Profit</span></div>
         </div>
+        ${envHTML}
 
         <div class="cr-details-grid">
             <div class="cr-section">
@@ -374,11 +548,11 @@ function displayAllRecommendations(results, inputs) {
             </div>
             <div class="cr-section">
                 <div class="cr-section-title">💧 Irrigation</div>
-                <p class="cr-section-text">${best.crop.irrigation[currentLanguage]}</p>
+                <p class="cr-section-text">${_t(best.crop.irrigation)}</p>
             </div>
             <div class="cr-section">
                 <div class="cr-section-title">🧪 Fertilizers</div>
-                <p class="cr-section-text">${best.crop.fertilizers[currentLanguage]}</p>
+                <p class="cr-section-text">${_t(best.crop.fertilizers)}</p>
                 ${bestRecsHTML}
             </div>
         </div>
@@ -400,7 +574,6 @@ function displayAllRecommendations(results, inputs) {
         const rankClass = idx === 0 ? 'cr-rank-best' : idx === 1 ? 'cr-rank-2nd' : idx === 2 ? 'cr-rank-3rd' : '';
         const rankLabel = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx+1}`;
 
-        // Suitability tag
         const suitTag = r.confidence >= 75 ? '<span class="cr-suit-tag cr-suit-high">High</span>'
                       : r.confidence >= 50 ? '<span class="cr-suit-tag cr-suit-med">Medium</span>'
                       : '<span class="cr-suit-tag cr-suit-low">Low</span>';
@@ -411,7 +584,7 @@ function displayAllRecommendations(results, inputs) {
             <div class="cr-rank-icon">${enrich.icon}</div>
             <div class="cr-rank-body">
                 <div class="cr-rank-top">
-                    <span class="cr-rank-name">${r.crop.name[currentLanguage]}</span>
+                    <span class="cr-rank-name">${_t(r.crop.name)}</span>
                     ${suitTag}
                 </div>
                 <div class="cr-rank-bar-wrap">
@@ -432,6 +605,7 @@ function displayAllRecommendations(results, inputs) {
     html += `</div></div>`;
 
     container.innerHTML = html;
+    console.log('[Recommend] HTML injected into container');
 
     // Animate rank bars + bind TTS buttons after paint
     requestAnimationFrame(() => {
@@ -740,6 +914,12 @@ function _ttsSpeak(results, inputs, bestExpl) {
 // ── Legacy single-crop display (kept for backward compatibility) ──────────────
 function displayRecommendation(crop, inputs, explanation) {
     // Wrap in the new multi-crop format with just one result
-    const fakeResults = [{ cropKey: Object.keys(cropDatabase).find(k => cropDatabase[k] === crop) || 'rice', crop, scores: explanation.featureScores, confidence: explanation.confidence }];
+    const cropKey = Object.keys(cropDatabase).find(k => cropDatabase[k] === crop) || 'rice';
+    const fakeResults = [{
+        cropKey,
+        crop,
+        scores: explanation.featureScores || {},
+        confidence: explanation.confidence || 0
+    }];
     displayAllRecommendations(fakeResults, inputs);
 }

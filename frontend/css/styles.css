@@ -3136,3 +3136,112 @@ html, body {
     cursor: not-allowed;
     pointer-events: none;
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   CROP RECOMMENDATION FORM — ENHANCEMENTS
+   Environmental fields, validation error, loading state
+═══════════════════════════════════════════════════════════ */
+
+/* ── Form section divider ─────────────────────────────────────────────────── */
+.form-group-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+}
+
+.form-group-divider::before,
+.form-group-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.optional-tag {
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(72,187,120,0.12);
+    border: 1px solid rgba(72,187,120,0.25);
+    color: var(--accent);
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+    margin-left: 4px;
+}
+
+/* ── 3-column form row for environmental inputs ───────────────────────────── */
+.form-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.form-row-3 .form-group {
+    margin-bottom: 0;
+}
+
+.form-row-3 .form-group label {
+    font-size: 12px;
+}
+
+@media (max-width: 600px) {
+    .form-row-3 { grid-template-columns: 1fr; }
+}
+
+/* ── Validation error banner ──────────────────────────────────────────────── */
+.rec-validation-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 11px 14px;
+    background: rgba(252, 129, 129, 0.1);
+    border: 1px solid rgba(252, 129, 129, 0.35);
+    border-radius: var(--radius-sm);
+    color: #fc8181;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    animation: recErrIn 0.25s ease both;
+}
+
+@keyframes recErrIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Predict button loading state ─────────────────────────────────────────── */
+.btn-loading {
+    opacity: 0.75;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.rec-btn-spinner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rec-btn-spinner svg {
+    animation: recBtnSpin 0.8s linear infinite;
+}
+
+@keyframes recBtnSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ── Environmental stats row in results ───────────────────────────────────── */
+.cr-env-stats {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 14px;
+}
