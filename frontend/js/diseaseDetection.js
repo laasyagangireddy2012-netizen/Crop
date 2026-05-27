@@ -185,7 +185,7 @@ async function _callBackendAPI(file, cropKey) {
     const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
     try {
-        const response = await fetch(' https://crop-98x2.onrender.com', {
+        const response = await fetch('https://crop-98x2.onrender.com/api/disease/predict', {
             method: 'POST',
             body: formData,
             signal: controller.signal
